@@ -5,7 +5,7 @@ st.set_page_config(page_title="다문화 학생수 변화 시각화", layout="wi
 st.title("연도별·학제별·국적별 다문화 학생수 변화")
 
 # 1. 로컬에 저장된 엑셀 파일 경로
-DATA_PATH = "/mnt/data/연도별 부모 국적별 다문화 학생수(2012-2024).xlsx"
+DATA_PATH = "data.xlsx"
 try:
     df = pd.read_excel(DATA_PATH, engine="openpyxl")
 except Exception as e:
