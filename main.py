@@ -16,10 +16,11 @@ except Exception as e:
 df.columns = df.columns.str.strip()
 
 # 기본 식별자 컬럼
+df_columns = df.columns.tolist()
 id_cols = ['연도', '학제']
-# '다문화학생수' 컬럼 제외 후 나머지를 국가별 컬럼으로 간주
-exclude_cols = id_cols + ['다문화학생수']
-value_cols = [col for col in df.columns if col not in exclude_cols]
+# '다문화학생수' 등 합계용 컬럼 제외
+exclude_cols = id_cols + [col for col in df_columns if '다문화' in col]
+value_cols = [col for col in df_columns if col not in exclude_cols]
 
 # 데이터를 긴 형식으로 변환
 df_long = df.melt(
@@ -29,9 +30,14 @@ df_long = df.melt(
     value_name='학생수'
 )
 
+# 연도 컬럼을 정수형으로 변환
+# (문자열인 경우 누락 처리 후 정수로)
+df_long['연도'] = pd.to_numeric(df_long['연도'], errors='coerce')
+df_long = df_long.dropna(subset=['연도'])
+df_long['연도'] = df_long['연도'].astype(int)
+
 # 사이드바 필터 설정
 st.sidebar.header("필터 설정")
-
 # 학제 리스트 (NaN 제거 후 문자열 변환)
 levels = df_long['학제'].dropna().astype(str).unique().tolist()
 levels.sort()
