@@ -16,12 +16,11 @@ except Exception as e:
 # 컬럼명 표준화
 df.columns = df.columns.str.strip()
 
-# 기본 식별자 컬럼
+# 기본 식별자 컬럼 및 값 컬럼 설정
 df_columns = df.columns.tolist()
 id_cols = ['연도', '학제']
-# '다문화학생수' 등 합계용 컬럼 제외
-exclude_cols = id_cols + [col for col in df_columns if '다문화' in col]
-value_cols = [col for col in df_columns if col not in exclude_cols]
+# 연도·학제를 제외한 모든 컬럼(국가 및 다문화학생수 포함)을 값 컬럼으로 사용
+value_cols = [col for col in df_columns if col not in id_cols]
 
 # 데이터를 긴 형식으로 변환
 df_long = df.melt(
@@ -43,17 +42,17 @@ levels = df_long['학제'].dropna().astype(str).unique().tolist()
 levels.sort()
 selected_level = st.sidebar.selectbox("학제 선택", levels)
 
-# 국가 리스트 (NaN 제거 후 문자열 변환), 최대 10개 선택 가능
-countries = df_long['국가'].dropna().astype(str).unique().tolist()
-countries.sort()
-selected_countries = st.sidebar.multiselect(
-    "국가 선택 (최대 10개)", countries, default=countries[:3], max_selections=10
+# 국가 및 다문화학생수 리스트 (NaN 제거 후 문자열 변환), 최대 10개 선택 가능
+tags = df_long['국가'].dropna().astype(str).unique().tolist()
+tags.sort()
+selected_tags = st.sidebar.multiselect(
+    "국가 및 총계 선택 (최대 10개)", tags, default=tags[:3], max_selections=10
 )
 
 # 2012~2024년 사이 데이터 필터링
 filtered = df_long[
     (df_long['학제'].astype(str) == selected_level) &
-    (df_long['국가'].astype(str).isin(selected_countries)) &
+    (df_long['국가'].astype(str).isin(selected_tags)) &
     (df_long['연도'].between(2012, 2024))
 ]
 
@@ -67,7 +66,7 @@ else:
         y='학생수',
         color='국가',
         markers=True,
-        title=f"[{selected_level}] 학제 - {', '.join(selected_countries)} 국가별 학생수 (2012-2024)"
+        title=f"[{selected_level}] 학제 - {', '.join(selected_tags)}"
     )
     fig.update_layout(xaxis_title="연도", yaxis_title="학생수")
     st.plotly_chart(fig, use_container_width=True)
