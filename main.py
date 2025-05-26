@@ -5,7 +5,7 @@ st.set_page_config(page_title="다문화 학생수 변화 시각화", layout="wi
 st.title("연도별·학제별·국적별 다문화 학생수 변화")
 
 # 1. 로컬에 저장된 엑셀 파일 경로
-DATA_PATH = "data.xlsx"
+DATA_PATH = "/mnt/data/연도별 부모 국적별 다문화 학생수(2012-2024).xlsx"
 try:
     df = pd.read_excel(DATA_PATH, engine="openpyxl")
 except Exception as e:
@@ -17,8 +17,9 @@ df.columns = df.columns.str.strip()
 
 # 기본 식별자 컬럼
 id_cols = ['연도', '학제']
-# 총계 컬럼 제외 후 나머지를 국가별 컬럼으로 간주
-value_cols = [col for col in df.columns if col not in id_cols + ['다문화학생수']]
+# '다문화학생수' 컬럼 제외 후 나머지를 국가별 컬럼으로 간주
+exclude_cols = id_cols + ['다문화학생수']
+value_cols = [col for col in df.columns if col not in exclude_cols]
 
 # 데이터를 긴 형식으로 변환
 df_long = df.melt(
@@ -28,20 +29,25 @@ df_long = df.melt(
     value_name='학생수'
 )
 
-# 필터 사이드바 설정
+# 사이드바 필터 설정
 st.sidebar.header("필터 설정")
-levels = sorted(df_long['학제'].unique())
+
+# 학제 리스트 (NaN 제거 후 문자열 변환)
+levels = df_long['학제'].dropna().astype(str).unique().tolist()
+levels.sort()
 selected_level = st.sidebar.selectbox("학제 선택", levels)
 
-countries = sorted(df_long['국가'].unique())
+# 국가 리스트 (NaN 제거 후 문자열 변환)
+countries = df_long['국가'].dropna().astype(str).unique().tolist()
+countries.sort()
 selected_countries = st.sidebar.multiselect(
     "국가 선택 (여러 개 선택 가능)", countries, default=countries[:3]
 )
 
 # 2012~2024년 사이 데이터 필터링
 filtered = df_long[
-    (df_long['학제'] == selected_level) &
-    (df_long['국가'].isin(selected_countries)) &
+    (df_long['학제'].astype(str) == selected_level) &
+    (df_long['국가'].astype(str).isin(selected_countries)) &
     (df_long['연도'].between(2012, 2024))
 ]
 
