@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import plotly.express as px
 
 st.set_page_config(page_title="다문화 학생수 변화 시각화", layout="wide")
 st.title("연도별·학제별·국적별 다문화 학생수 변화")
@@ -31,7 +32,6 @@ df_long = df.melt(
 )
 
 # 연도 컬럼을 정수형으로 변환
-# (문자열인 경우 누락 처리 후 정수로)
 df_long['연도'] = pd.to_numeric(df_long['연도'], errors='coerce')
 df_long = df_long.dropna(subset=['연도'])
 df_long['연도'] = df_long['연도'].astype(int)
@@ -43,11 +43,11 @@ levels = df_long['학제'].dropna().astype(str).unique().tolist()
 levels.sort()
 selected_level = st.sidebar.selectbox("학제 선택", levels)
 
-# 국가 리스트 (NaN 제거 후 문자열 변환)
+# 국가 리스트 (NaN 제거 후 문자열 변환), 최대 10개 선택 가능
 countries = df_long['국가'].dropna().astype(str).unique().tolist()
 countries.sort()
 selected_countries = st.sidebar.multiselect(
-    "국가 선택 (여러 개 선택 가능)", countries, default=countries[:3]
+    "국가 선택 (최대 10개)", countries, default=countries[:3], max_selections=10
 )
 
 # 2012~2024년 사이 데이터 필터링
@@ -60,13 +60,14 @@ filtered = df_long[
 if filtered.empty:
     st.warning("선택하신 조건에 맞는 데이터가 없습니다.")
 else:
-    # 피벗 테이블 생성
-    pivot = filtered.pivot_table(
-        index='연도',
-        columns='국가',
-        values='학생수'
-    ).sort_index()
-
-    # 꺾은선 그래프 출력
-    st.subheader(f"[{selected_level}] 학제 - {', '.join(selected_countries)} 국가별 학생수 (2012-2024)")
-    st.line_chart(pivot)
+    # Plotly로 꺾은선 그래프 생성
+    fig = px.line(
+        filtered,
+        x='연도',
+        y='학생수',
+        color='국가',
+        markers=True,
+        title=f"[{selected_level}] 학제 - {', '.join(selected_countries)} 국가별 학생수 (2012-2024)"
+    )
+    fig.update_layout(xaxis_title="연도", yaxis_title="학생수")
+    st.plotly_chart(fig, use_container_width=True)
