@@ -4,37 +4,45 @@ import pandas as pd
 st.set_page_config(page_title="다문화 학생수 변화 시각화", layout="wide")
 st.title("연도별·학제별·국적별 다문화 학생수 변화")
 
-# 1. 업로드된 엑셀 파일을 바로 로드
-DATA_PATH = "data.xlsx"
+# 1. 로컬에 저장된 엑셀 파일 경로
+DATA_PATH = "/mnt/data/연도별 부모 국적별 다문화 학생수(2012-2024).xlsx"
 try:
-    df = pd.read_excel(DATA_PATH)
+    df = pd.read_excel(DATA_PATH, engine="openpyxl")
 except Exception as e:
     st.error(f"데이터 파일을 불러오는 중 오류가 발생했습니다: {e}")
     st.stop()
 
-# 컬럼명 확인 및 표준화
+# 컬럼명 표준화
 df.columns = df.columns.str.strip()
-# 필수 컬럼 체크
-required_cols = ['연도', '학제', '국가', '학생수']
-if not all(col in df.columns for col in required_cols):
-    st.error(f"데이터에 필요한 컬럼이 없습니다. 최소한 {', '.join(required_cols)} 컬럼이 포함되어야 합니다.")
-    st.stop()
 
-# 사이드바 필터
-st.sidebar.header("필터 설정")
-levels = df['학제'].unique().tolist()
-selected_level = st.sidebar.selectbox("학제 선택", levels)
+# 기본 식별자 컬럼
+id_cols = ['연도', '학제']
+# 총계 컬럼 제외 후 나머지를 국가별 컬럼으로 간주
+value_cols = [col for col in df.columns if col not in id_cols + ['다문화학생수']]
 
-countries = df['국가'].unique().tolist()
-selected_countries = st.sidebar.multiselect(
-    "국가 선택 (여러 개 선택 가능)", countries, default=countries[:1]
+# 데이터를 긴 형식으로 변환
+df_long = df.melt(
+    id_vars=id_cols,
+    value_vars=value_cols,
+    var_name='국가',
+    value_name='학생수'
 )
 
-# 데이터 필터링 (2012~2024)
-filtered = df[
-    (df['학제'] == selected_level) &
-    (df['국가'].isin(selected_countries)) &
-    (df['연도'].between(2012, 2024))
+# 필터 사이드바 설정
+st.sidebar.header("필터 설정")
+levels = sorted(df_long['학제'].unique())
+selected_level = st.sidebar.selectbox("학제 선택", levels)
+
+countries = sorted(df_long['국가'].unique())
+selected_countries = st.sidebar.multiselect(
+    "국가 선택 (여러 개 선택 가능)", countries, default=countries[:3]
+)
+
+# 2012~2024년 사이 데이터 필터링
+filtered = df_long[
+    (df_long['학제'] == selected_level) &
+    (df_long['국가'].isin(selected_countries)) &
+    (df_long['연도'].between(2012, 2024))
 ]
 
 if filtered.empty:
@@ -42,7 +50,9 @@ if filtered.empty:
 else:
     # 피벗 테이블 생성
     pivot = filtered.pivot_table(
-        index='연도', columns='국가', values='학생수'
+        index='연도',
+        columns='국가',
+        values='학생수'
     ).sort_index()
 
     # 꺾은선 그래프 출력
