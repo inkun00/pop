@@ -2,8 +2,8 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-st.set_page_config(page_title="다문화 학생수 변화 시각화", layout="wide")
-st.title("연도별·학제별·국적별 다문화 학생수 변화")
+st.set_page_config(page_title="이주배경 학생수 변화 시각화", layout="wide")
+st.title("연도별·학제별·국적별 이주배경 학생수 변화")
 
 # 1. 로컬에 저장된 엑셀 파일 경로
 DATA_PATH = "data.xlsx"
@@ -19,7 +19,7 @@ df.columns = df.columns.str.strip()
 # 기본 식별자 컬럼 및 값 컬럼 설정
 df_columns = df.columns.tolist()
 id_cols = ['연도', '학제']
-# 연도·학제를 제외한 모든 컬럼(국가 및 다문화학생수 포함)을 값 컬럼으로 사용
+# 연도·학제를 제외한 모든 컬럼(국가 및 이주배경학생수 포함)을 값 컬럼으로 사용
 value_cols = [col for col in df_columns if col not in id_cols]
 
 # 데이터를 긴 형식으로 변환
@@ -42,7 +42,7 @@ levels = df_long['학제'].dropna().astype(str).unique().tolist()
 levels.sort()
 selected_level = st.sidebar.selectbox("학제 선택", levels)
 
-# 국가 및 다문화학생수 리스트 (NaN 제거 후 문자열 변환), 최대 10개 선택 가능
+# 국가 및 이주배경학생수 리스트 (NaN 제거 후 문자열 변환), 최대 10개 선택 가능
 tags = df_long['국가'].dropna().astype(str).unique().tolist()
 tags.sort()
 selected_tags = st.sidebar.multiselect(
