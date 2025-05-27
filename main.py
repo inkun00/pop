@@ -48,7 +48,7 @@ selected_level = st.sidebar.selectbox("학제 선택", levels, index=default_lev
 tags = df_long['국가'].dropna().astype(str).unique().tolist()
 tags.sort()
 # 기본 선택을 ['합계', '베트남', '태국']로 설정
-default_tags = [tag for tag in ['합계', '베트남', '태국'] if tag in tags]
+default_tags = [tag for tag in ['합계', '베트남', '중국'] if tag in tags]
 selected_tags = st.sidebar.multiselect(
     "국가 및 총계 선택 (최대 10개)", tags,
     default=default_tags,
