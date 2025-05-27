@@ -46,7 +46,7 @@ selected_level = st.sidebar.selectbox("학제 선택", levels)
 tags = df_long['국가'].dropna().astype(str).unique().tolist()
 tags.sort()
 selected_tags = st.sidebar.multiselect(
-    "국가 및 총계 선택 (최대 10개)", tags, default=tags[:3], max_selections=10
+    "국가 및 총계 선택 (최대 10개)", tags, default=tags[베트남,합계,태국], max_selections=10
 )
 
 # 2012~2024년 사이 데이터 필터링
