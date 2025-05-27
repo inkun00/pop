@@ -40,13 +40,19 @@ st.sidebar.header("필터 설정")
 # 학제 리스트 (NaN 제거 후 문자열 변환)
 levels = df_long['학제'].dropna().astype(str).unique().tolist()
 levels.sort()
-selected_level = st.sidebar.selectbox("학제 선택", levels)
+# 기본값을 '초등학교'로 설정
+default_level_index = levels.index('초등학교') if '초등학교' in levels else 0
+selected_level = st.sidebar.selectbox("학제 선택", levels, index=default_level_index)
 
 # 국가 및 이주배경학생수 리스트 (NaN 제거 후 문자열 변환), 최대 10개 선택 가능
 tags = df_long['국가'].dropna().astype(str).unique().tolist()
 tags.sort()
+# 기본 선택을 ['합계', '베트남', '태국']로 설정
+default_tags = [tag for tag in ['합계', '베트남', '태국'] if tag in tags]
 selected_tags = st.sidebar.multiselect(
-    "국가 및 총계 선택 (최대 10개)", tags, default=tags['베트남','합계','태국'], max_selections=10
+    "국가 및 총계 선택 (최대 10개)", tags,
+    default=default_tags,
+    max_selections=10
 )
 
 # 2012~2024년 사이 데이터 필터링
